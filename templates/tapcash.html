@@ -1,0 +1,91 @@
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="../static/css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+
+<div class="dropdown">
+    <button onclick="myFunction()" class="dropbtn">Pilih topik lain:</button>
+    <div id="myDropdown" class="dropdown-content">
+      <a href="http://127.0.0.1:5000/rekening">Rekening</a> 
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+
+  <div>
+    <h1>TapCash</h1><br>
+  </div>
+
+  <div class="container">
+    <div style="display: flex; justify-content: flex-end"; class="row">
+        <div class="col-6 chart">
+            <canvas id="myChart" width="400" height="400"></canvas>
+        </div>
+        <div class="col-6 chart">
+            <canvas id="myChart2" width="800" height="400"></canvas>
+        </div>
+    </div>
+  </div>
+  <script>
+    let labels1 = JSON.parse('{{labels|tojson}}');
+    let data1 = JSON.parse('{{values|tojson}}');
+    let colors1 = ['#49A9EA','#36CAAB','#36CCCB'];
+    
+    let myDoughnutChart = document.getElementById("myChart").getContext('2d');
+    
+    let chart1 = new Chart(myDoughnutChart, {
+        type: 'doughnut',
+        data: {
+            labels: labels1,
+            datasets: [ {
+                data: data1,
+                backgroundColor: colors1
+            }]
+        },
+        options: {
+            title: {
+                text: "Sentimen dari topik TapCash",
+                display: true
+            }
+        }
+    });
+    
+    let labels2 = JSON.parse('{{labels|tojson}}');
+    let data2 =  JSON.parse('{{values|tojson}}');
+    
+    // let colors2 = ['#49A9EA', '#36CAAB', '#34495E', '#B370CF'];
+    
+    let myChart2 = document.getElementById("myChart2").getContext('2d');
+    
+    let chart2 = new Chart(myChart2, {
+        type: 'bar',
+        data: {
+            labels: labels2,
+            datasets: [ {
+                data: data2,
+                // backgroundColor: colors2
+            }]
+        },
+        options: {
+            title: {
+                text: "INI GANTI WORDCLOUD",
+                display: true
+            },
+            legend: {
+              display: false
+            }
+        }
+    });
+      </script>
+{% for table in result_table %}
+            {{titles[loop.index]}}
+            {{ table|safe }}
+{% endfor %}
+
+<script src="dropdown.js"></script>
+
+
+  

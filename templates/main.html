@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head> 
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+    
+</head> 
+{{topic_labels}}
+{{topic_values}}
+<body>
+<div>
+  <h1>Hasil tebakan topik!</h1><br>
+</div>
+
+<h1>Charts, Charts, Charts</h1>
+<div class="container">
+  <div style="display: flex; justify-content: flex-end"; class="row">
+      <div class="col-6 chart">
+          <canvas id="myChart" width="400" height="400"></canvas>
+      </div>
+      <div class="col-6 chart">
+          <canvas id="myChart2" width="800" height="400"></canvas>
+      </div>
+  </div>
+</div>
+<!-- <script src="mainBarChart.js"></script> -->
+<script>
+let labels1 = JSON.parse('{{sentiment_labels|tojson}}');
+let data1 = JSON.parse('{{sentiment_values|tojson}}');
+let colors1 = ['#49A9EA','#36CAAB','#36CCCB'];
+
+let myDoughnutChart = document.getElementById("myChart").getContext('2d');
+
+let chart1 = new Chart(myDoughnutChart, {
+    type: 'doughnut',
+    data: {
+        labels: labels1,
+        datasets: [ {
+            data: data1,
+            backgroundColor: colors1
+        }]
+    },
+    options: {
+        title: {
+            text: "Sentimen tentang BNI:",
+            display: true
+        }
+    }
+});
+
+let labels2 = JSON.parse('{{topic_labels|tojson}}');
+let data2 =  JSON.parse('{{topic_values|tojson}}');
+console.log(labels2);
+console.log("alo test console masuk ga ni");
+
+// let colors2 = ['#49A9EA', '#36CAAB', '#34495E', '#B370CF'];
+
+let myChart2 = document.getElementById("myChart2").getContext('2d');
+
+let chart2 = new Chart(myChart2, {
+    type: 'bar',
+    data: {
+        labels: labels2,
+        datasets: [ {
+            data: data2,
+            // backgroundColor: colors2
+        }]
+    },
+    options: {
+        title: {
+            text: "Topik-topik terkait BNI yang muncul:",
+            display: true
+        },
+        legend: {
+          display: false
+        }
+    }
+});
+  </script>
+
+<form class="form-horizontal text-center" action = "http://127.0.0.1:5000/tapcash" method ="post">
+    <button type="submit" class="button btn btn-default">TapCash</button>
+</form>
+
+
+<form class="form-horizontal text-center" action = "http://127.0.0.1:5000/rekening" method ="post">
+    <button type="submit" class="button btn btn-default">Rekening</button>
+</form>
+</body>
+  <!-- <script>
+    // document.querySelector(".results").style.display = "block";
+    var res_tab = result_table;
+    var res = result;
+    var dur = asdasd;
+    console.log(typeof dur)
+    console.log(typeof res)
+
+    // if ((typeof dur !== 'undefined') || (typeof res_tab !== 'undefined'))
+    if (typeof result !== 'undefined')
+    {document.querySelector(".results").style.display = "block";
+    console.log("masukkkk");
+    }
+    else{
+        document.querySelector(".results").style.display = "none";
+    }
+</script> -->
+  

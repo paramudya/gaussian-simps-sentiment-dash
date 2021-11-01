@@ -6,6 +6,8 @@ import pytz
 import mysql.connector
 import datetime
 
+from collections import Counter
+
 def insert(user,time,tweet):
     mycursor = mydb.cursor()
 
@@ -42,6 +44,16 @@ def load():
     results = mycursor.fetchall()
     return pd.DataFrame(results,columns=['id','username','time','tweet'])
 
+def load_bytopic(topic_to_query):
+    mycursor = mydb.cursor()
+    sql = f"SELECT * FROM predicted_tweets WHERE topic='{topic_to_query}';"
+    mycursor.execute(sql)
+
+    results = pd.DataFrame(mycursor.fetchall(),columns=['id','username','time','tweet','topic','sentiment'])
+    sents=list(results.loc[:,'sentiment'])
+    count=dict(sorted(Counter(sents).items(), key=lambda item: item[1],reverse=True))
+
+    return {"table":results,"labels": list(count.keys()),"values": list(count.values())}
 mydb = mysql.connector.connect(
   host="localhost",
   user="root",

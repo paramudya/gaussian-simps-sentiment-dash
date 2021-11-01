@@ -6,39 +6,55 @@ import pytz
 import mysql.connector
 import datetime
 
+import twint
+import nest_asyncio
+
 from collections import Counter
 
-def insert(user,time,tweet):
+def delete_predicted():
     mycursor = mydb.cursor()
-
-    sql = "INSERT INTO new_tweets (username,time,tweet) VALUES (%s, %s, %s)"
-
-    val = (user,time,tweet) #ganti
-
-    mycursor.execute(sql, val)
-
+    mycursor.execute("DELETE FROM predicted_tweets")
     mydb.commit()
 
-def scrape(delta_day):
-    skrg = datetime.datetime.now()
-    waktu_kebelakang = skrg - datetime.timedelta(days = delta_day)
-    waktu_kebelakang_tz=pytz.UTC.localize(waktu_kebelakang) 
+def insert(id,user,time,tweet,sent,topic):
+    mycursor = mydb.cursor()
 
-    search = tweepy.Cursor(api.search_tweets, q='@bni OR @bnicustomercare -filter:retweets',
-                           result_type='recent',lang="id",tweet_mode='extended').items(100)
-    for tweet in search: #ati2 di waktu bsii masi salah
-        created = tweet.created_at
+    sql = "INSERT INTO predicted_tweets (id,username,time,tweet,topic,sentiment) VALUES (%s, %s, %s, %s, %s, %s)"
+    val = (id,user,time,tweet,sent,topic) #ganti
+    try:
+        mycursor.execute(sql, val)
+    except:
+        print('duplicate on predicted?')
+    mydb.commit()
 
-        if created > waktu_kebelakang_tz:
-            text = tweet.full_text.replace("\n", "")
-            user = tweet.user.screen_name
+def scrape():
+    c = twint.Config()
+    c.Search = '@bni OR @bnicustomercare'
+    c.Since = waktu_str
+    c.Limit = 800
+    c.Pandas = True
+    # Run
+    # nest_asyncio.apply()
+    search=twint.run.Search(c)
 
-            insert(user,created,text)
-        
+    tweets_loaded=twint.storage.panda.Tweets_df[['id','date','tweet','username']] 
+    tweets_loaded = tweets_loaded.rename(columns={'date': 'time'})
+    
+    cursor = mydb.cursor()
+    cols = "`,`".join([str(i) for i in tweets_loaded.columns.tolist()])
+    for i,row in tweets_loaded.iterrows():
+        print(row['id'])
+        sql = "INSERT INTO `new_tweets` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
+        try:
+            cursor.execute(sql, tuple(row))
+        except:
+            print('duplicate')
+
+        mydb.commit()
 def load():
     mycursor = mydb.cursor()
 
-    sql = "SELECT * FROM new_tweets"
+    sql = f"SELECT * FROM new_tweets WHERE time>='{waktu_str}'"
 
     mycursor.execute(sql)
     results = mycursor.fetchall()
@@ -60,11 +76,14 @@ mydb = mysql.connector.connect(
   database="new_tweets"
 )
 
-consumer_key = "TT4Bj6NmvWdTjhFYGKmcSFp1j"
-consumer_secret = "ukqMH4TbVcJ5xU0zLpygW697VJjfHO7fE76j3EWmqn6lxrbleF"
-access_token = "371720101-Ebi0IZ7J7QbWgvoMfmWIpH7oahvdy6bKrRsg2i0O"
-access_token_secret = "xp9qrIrpCQXgqHIw2sA3YzSyy36xNTCROzknRD732gPmI"
+skrg = datetime.datetime.now()
+waktu_kebelakang = skrg - datetime.timedelta(days = 1)
+waktu_str=str(waktu_kebelakang.replace(microsecond=0))
+# consumer_key = "TT4Bj6NmvWdTjhFYGKmcSFp1j"
+# consumer_secret = "ukqMH4TbVcJ5xU0zLpygW697VJjfHO7fE76j3EWmqn6lxrbleF"
+# access_token = "371720101-Ebi0IZ7J7QbWgvoMfmWIpH7oahvdy6bKrRsg2i0O"
+# access_token_secret = "xp9qrIrpCQXgqHIw2sA3YzSyy36xNTCROzknRD732gPmI"
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
+# auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+# auth.set_access_token(access_token, access_token_secret)
+# api = tweepy.API(auth)

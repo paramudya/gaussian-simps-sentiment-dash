@@ -6,6 +6,7 @@ from transformers import BertTokenizer,BertForSequenceClassification,TextClassif
 import time
 
 from sql import *
+import twint
 
 from collections import Counter
 
@@ -35,22 +36,27 @@ def labels_name(label_numbers,saved_labels):
     return labels
 
 def predict():
-    # start_time = time.time()
+    start_time = time.time()
+    scrape()
     tweets_loaded=load() #load from scraped tweets
     tweets=list(tweets_loaded.loc[:,'tweet'])
+    delete_predicted()
 
     predicted_topics,predicted_sentiments=[],[]
-    for tweet in tweets:
-        predicted_topic=labels_name(pipe_topic(tweet),topic_labels_saved)
+    for i,row in tweets_loaded.iterrows():
+        predicted_topic=labels_name(pipe_topic(row['tweet']),topic_labels_saved)
         predicted_topics.append(predicted_topic[0])
-        predicted_sentiment=labels_name(pipe_sentiment(tweet),sentiment_labels_saved)
+        predicted_sentiment=labels_name(pipe_sentiment(row['tweet']),sentiment_labels_saved)
         predicted_sentiments.append(predicted_sentiment[0])
-    # duration = (time.time() - start_time)
+        insert(row['id'],row['username'],row['time'],row['tweet'],predicted_sentiment[0],predicted_topic[0])
+
+    duration = (time.time() - start_time)
     count_topic=dict(sorted(Counter(predicted_topics).items(), key=lambda item: item[1],reverse=True))
     count_sentiment=dict(sorted(Counter(predicted_sentiments).items(), key=lambda item: item[1],reverse=True))
 
     return {"topic_labels": list(count_topic.keys()),"topic_values": list(count_topic.values()),
-    "sentiment_labels": list(count_sentiment.keys()),"sentiment_values": list(count_sentiment.values())}
+    "sentiment_labels": list(count_sentiment.keys()),"sentiment_values": list(count_sentiment.values()),
+    "duration": duration}
 
 
 def predict_pertweet(tweet):
@@ -59,19 +65,19 @@ def predict_pertweet(tweet):
     duration = (time.time() - start_time)
     return {"pred": predicted_label[0],"dur": duration}
 
-def predict_fromdb(label_selected):
-    start_time = time.time()
+# def predict_fromdb(label_selected):
+#     start_time = time.time()
 
-    tweets_loaded=load()
-    tweets=list(tweets_loaded.loc[:,'tweet'])
+#     tweets_loaded=load()
+#     tweets=list(tweets_loaded.loc[:,'tweet'])
 
-    predicted_labels=[]
-    for tweet in tweets:
-        predicted_label=labels_name(pipe_topic(tweet),topic_labels_saved)
-        predicted_labels.append(predicted_label[0])
-    duration = (time.time() - start_time)
-    df_predicted=pd.DataFrame({"tweets": tweets,"pred": predicted_labels})
-    return df_predicted[df_predicted.pred==label_selected],duration
+#     predicted_labels=[]
+#     for tweet in tweets:
+#         predicted_label=labels_name(pipe_topic(tweet),topic_labels_saved)
+#         predicted_labels.append(predicted_label[0])
+#     duration = (time.time() - start_time)
+#     df_predicted=pd.DataFrame({"tweets": tweets,"pred": predicted_labels})
+#     return df_predicted[df_predicted.pred==label_selected],duration
 
 def load_fromdb_bytopic(label_selected):
     return load_bytopic(label_selected)    

@@ -16,11 +16,11 @@ def delete_predicted():
     mycursor.execute("DELETE FROM predicted_tweets")
     mydb.commit()
 
-def insert(id,user,time,tweet,sent,topic):
+def insert(id,link,user,time,tweet,sent,topic):
     mycursor = mydb.cursor()
 
-    sql = "INSERT INTO predicted_tweets (id,username,time,tweet,topic,sentiment) VALUES (%s, %s, %s, %s, %s, %s)"
-    val = (id,user,time,tweet,sent,topic) #ganti
+    sql = "INSERT INTO predicted_tweets (id,username,time,tweet,topic,sentiment) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    val = (id,link,user,time,tweet,sent,topic) #ganti
     try:
         mycursor.execute(sql, val)
     except:
@@ -37,7 +37,7 @@ def scrape():
     # nest_asyncio.apply()
     search=twint.run.Search(c)
 
-    tweets_loaded=twint.storage.panda.Tweets_df[['id','date','tweet','username']] 
+    tweets_loaded=twint.storage.panda.Tweets_df[['id','link','date','tweet','username']] 
     tweets_loaded = tweets_loaded.rename(columns={'date': 'time'})
     
     cursor = mydb.cursor()
@@ -49,8 +49,8 @@ def scrape():
             cursor.execute(sql, tuple(row))
         except:
             print('duplicate')
-
         mydb.commit()
+
 def load():
     mycursor = mydb.cursor()
 
@@ -58,14 +58,14 @@ def load():
 
     mycursor.execute(sql)
     results = mycursor.fetchall()
-    return pd.DataFrame(results,columns=['id','username','time','tweet'])
+    return pd.DataFrame(results,columns=['id','link','username','time','tweet'])
 
 def load_bytopic(topic_to_query):
     mycursor = mydb.cursor()
     sql = f"SELECT * FROM predicted_tweets WHERE topic='{topic_to_query}';"
     mycursor.execute(sql)
 
-    results = pd.DataFrame(mycursor.fetchall(),columns=['id','username','time','tweet','topic','sentiment'])
+    results = pd.DataFrame(mycursor.fetchall(),columns=['id',' link','username','time','tweet','topic','sentiment'])
     sents=list(results.loc[:,'sentiment'])
     count=dict(sorted(Counter(sents).items(), key=lambda item: item[1],reverse=True))
 

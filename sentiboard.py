@@ -48,7 +48,7 @@ def predict():
         predicted_topics.append(predicted_topic[0])
         predicted_sentiment=labels_name(pipe_sentiment(row['tweet']),sentiment_labels_saved)
         predicted_sentiments.append(predicted_sentiment[0])
-        insert(row['id'],row['username'],row['time'],row['tweet'],predicted_sentiment[0],predicted_topic[0])
+        insert(row['id'],row['link'],row['username'],row['time'],row['tweet'],predicted_sentiment[0],predicted_topic[0])
 
     duration = (time.time() - start_time)
     count_topic=dict(sorted(Counter(predicted_topics).items(), key=lambda item: item[1],reverse=True))

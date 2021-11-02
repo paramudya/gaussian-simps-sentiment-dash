@@ -28,6 +28,5 @@ def list_rekening():
     return render_template("topik.html",result_table=[res['table'].to_html(classes='data', header="true")], titles=res['table'].columns.values,
     labels=res['labels'],values=res['values'])
 
-
 if __name__ == "__main__":
     app.run(debug=True)

@@ -54,11 +54,11 @@ def delete_predicted(): # Done
     mycursor.execute("TRUNCATE TABLE predicted_tweets")
     mydb.commit()
 
-def insert(id,time,tweet,username,link,topic,sent):
+def insert(id,time,tweet,username,link,retweets,jam,likes,topic,sent):
     mycursor = mydb.cursor()
 
-    sql = "INSERT INTO predicted_tweets (id,time,tweet,username,link,topic,sentiment) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-    val = (id,time,tweet,username,link,topic,sent)
+    sql = "INSERT INTO predicted_tweets (id,time,tweet,username,link,retweets,jam,likes,topic,sentiment) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    val = (id,time,tweet,username,link,retweets,likes,jam,topic,sent)
 
     try:
         mycursor.execute(sql, val)
@@ -66,6 +66,13 @@ def insert(id,time,tweet,username,link,topic,sent):
         print('Failed to insert. Check the column')
     # mycursor.execute(sql, val)
     mydb.commit()
+
+def update(id, topic2, sent2):
+    mycursor = mydb.cursor()
+
+    sql = "UPDATE predicted_tweets SET topic2 = '"+topic2+"', sentiment2 = '"+sent2+"' WHERE id = "+id
+    mycursor.execute(sql)
+
 
 def scrape(): # Done
     c = twint.Config()
@@ -77,8 +84,16 @@ def scrape(): # Done
     # nest_asyncio.apply()
     search=twint.run.Search(c)
 
-    tweets_loaded=twint.storage.panda.Tweets_df[['id','link','date','tweet','username']] 
-    tweets_loaded = tweets_loaded.rename(columns={'date': 'time'})
+    tweets_loaded=twint.storage.panda.Tweets_df[['id','link','date','tweet','username','nlikes','nretweets']] 
+    tweets_loaded = tweets_loaded.rename(columns={'date': 'time', 'nlikes': 'likes', 'nretweets': 'retweets'})
+
+    # Remove Duplicated & BNI Tweets
+    tweets_loaded.drop_duplicates(keep='first', inplace=True)
+    tweets_loaded = tweets_loaded[tweets_loaded['username'] != 'BNICustomerCare']
+    tweets_loaded = tweets_loaded[tweets_loaded['username'] != 'BNI']
+    tweets_loaded.reset_index(drop=True, inplace=True)
+    tweets_loaded
+
     
     cursor = mydb.cursor()
     cols = "`,`".join([str(i) for i in tweets_loaded.columns.tolist()])
@@ -99,14 +114,24 @@ def load(): # Done
     mycursor.execute(sql)
     results = mycursor.fetchall()
 
-    return pd.DataFrame(results,columns=['id','time','tweet','username','link'])
+    return pd.DataFrame(results,columns=['id','time','tweet','username','link','retweets','likes'])
+
+def load_predicted(): # Done
+    mycursor = mydb.cursor()
+
+    sql = f"SELECT * FROM predicted_tweets"
+
+    mycursor.execute(sql)
+    results = mycursor.fetchall()
+
+    return pd.DataFrame(results,columns=['id','time','tweet','username','link','retweets','likes','jam','topic','topic2','sentiment','sentiment2'])
 
 def load_bytopic(topic_to_query): # Done
     mycursor = mydb.cursor()
     sql = f"SELECT * FROM predicted_tweets WHERE topic='{topic_to_query}';"
     mycursor.execute(sql)
 
-    results = pd.DataFrame(mycursor.fetchall(),columns=['id','time','tweet','username','link','topic','sentiment'])
+    results = pd.DataFrame(mycursor.fetchall(),columns=['id','time','tweet','username','link','retweets','likes','jam','topic','topic2','sentiment','sentiment2'])
     sents=list(results.loc[:,'sentiment'])
     count=dict(sorted(Counter(sents).items(), key=lambda item: item[1],reverse=True))
 
@@ -125,11 +150,3 @@ mydb = mysql.connector.connect(
 skrg = datetime.datetime.now()
 waktu_kebelakang = skrg - datetime.timedelta(days = 1)
 waktu_str=str(waktu_kebelakang.replace(microsecond=0))
-# consumer_key = "TT4Bj6NmvWdTjhFYGKmcSFp1j"
-# consumer_secret = "ukqMH4TbVcJ5xU0zLpygW697VJjfHO7fE76j3EWmqn6lxrbleF"
-# access_token = "371720101-Ebi0IZ7J7QbWgvoMfmWIpH7oahvdy6bKrRsg2i0O"
-# access_token_secret = "xp9qrIrpCQXgqHIw2sA3YzSyy36xNTCROzknRD732gPmI"
-
-# auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-# auth.set_access_token(access_token, access_token_secret)
-# api = tweepy.API(auth)

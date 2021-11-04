@@ -1,19 +1,37 @@
-<link rel="preconnect" href="https://fonts.gstatic.com">
-<link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
-<link rel="stylesheet" type="text/css" href="../static/css/style.css">
+<!DOCTYPE html>
+<html lang="en">
 
-<div>
-  <h1>Tebak topik!</h1><br>
-</div>
+<head> 
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+</head>
 
-<p>atau ambil dari database: </p>
+<body>
+    <div>
+      <h1>Tebak topik!</h1><br>
+    </div>
 
-<form class="form-horizontal text-center" action = "http://127.0.0.1:5000/main" method ="post">
-    <!-- <p><input type ="text" name = "link_tweet_input" placeholder="link tweet" /></p> -->
-    <button type="submit" class="button btn btn-default">kesimpulan dari topik-topik terprediksi dari tweets di db!</button>
-</form>
+    <p>atau ambil dari database: </p>
 
-<!-- <form class="form-horizontal text-center" action = "http://127.0.0.1:5000/result_fromdb" method ="post">
-    <button type="submit" class="button btn btn-default">tapcash</button>
-</form> -->
-</div>
+    <form class="form-horizontal text-center" action = "{{ url_for('home') }}" method ="post">
+        <button type="submit" class="button btn btn-default">Crawling dan Prediksi</button>
+    </form>
+
+    <h1> {{ count }}</h1>
+    {% if(count == 0) %}
+    <h2> Tidak ada Data</h2>
+    {% else %}
+    <h2> VISUALISASI DATA</h2>
+
+
+    {%for topic in topic_list%}
+        <li>
+            <a href = "{{ url_for('getTopik' ,topik=topic) }}">{{topic}}</a>
+        </li>
+    {%endfor%}
+
+
+    {% endif %}
+</body>

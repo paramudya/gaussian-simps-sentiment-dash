@@ -29,17 +29,20 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased',
 pipe_sentiment = TextClassificationPipeline(model=sentiment_model, tokenizer=tokenizer)
 sentiment_labels_saved={0: 'negatif',1: 'netral',2: 'positif'}
 
-def labels_name(label_numbers,saved_labels):
+def labels_name(label_numbers,saved_labels): # Done
     labels=[]
     for label_dict in (label_numbers):
         labels.append(saved_labels[int(label_dict['label'][-1])])
     return labels
 
-def predict():
+def crawl_predict(): # Done
+    # Crawl
     start_time = time.time()
     scrape()
     tweets_loaded=load() #load from scraped tweets
     tweets=list(tweets_loaded.loc[:,'tweet'])
+
+    # Delete
     delete_predicted()
 
     predicted_topics,predicted_sentiments=[],[]
@@ -48,7 +51,9 @@ def predict():
         predicted_topics.append(predicted_topic[0])
         predicted_sentiment=labels_name(pipe_sentiment(row['tweet']),sentiment_labels_saved)
         predicted_sentiments.append(predicted_sentiment[0])
-        insert(row['id'],row['link'],row['username'],row['time'],row['tweet'],predicted_sentiment[0],predicted_topic[0])
+        format_time = row['time'].strftime('%Y-%m-%d %H:%M:%S')
+        insert(row['id'],format_time,row['tweet'],row['username'],row['link'],predicted_topic[0],predicted_sentiment[0])
+        print("Success Insert ID",row['id'])
 
     duration = (time.time() - start_time)
     count_topic=dict(sorted(Counter(predicted_topics).items(), key=lambda item: item[1],reverse=True))
@@ -57,7 +62,6 @@ def predict():
     return {"topic_labels": list(count_topic.keys()),"topic_values": list(count_topic.values()),
     "sentiment_labels": list(count_sentiment.keys()),"sentiment_values": list(count_sentiment.values()),
     "duration": duration}
-
 
 def predict_pertweet(tweet):
     start_time = time.time()
@@ -79,8 +83,8 @@ def predict_pertweet(tweet):
 #     df_predicted=pd.DataFrame({"tweets": tweets,"pred": predicted_labels})
 #     return df_predicted[df_predicted.pred==label_selected],duration
 
-def load_fromdb_bytopic(label_selected):
-    return load_bytopic(label_selected)    
+# def load_fromdb_bytopic(label_selected):
+#     return load_bytopic(label_selected)    
 
 
 # if __name__ == '__main__':
